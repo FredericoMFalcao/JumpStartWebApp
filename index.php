@@ -9,16 +9,49 @@ if(file_exists(".credentials.json")) extract(json_decode(file_get_contents(".cre
 $db = new PDO("mysql:host=".($dbHost??MYSQL_HOST).";dbname=".($dbName??MYSQL_DATABASE_NAME), $dbUser??MYSQL_USERNAME, $dbPassword??MYSQL_PASSWORD);
 }
 connectToDatabase();
+/*
+* DB FUNCTIONS 
+*
+*/
+function fetchAll($q) {global $db; $sq=$db->prepare($q); $sq->execute(); return $sq->fetchAll(PDO::FETCH_ASSOC); }
+function extractFirstCol($array) { $output = []; foreach($array as $rowNo => $row) $output[] = $row[array_keys($row)[0]]; return $output;}
 function includeJavascriptFunctions() {
 	global $db;
-	$q = $db->prepare("SELECT * FROM JavascriptFuncs ORDER BY Namespace");
-	$q->execute();
-	$lastNamespace = "";
-	foreach($q->fetchAll(PDO::FETCH_ASSOC) as $row) {
-		extract($row);
-		if ($Namespace != $lastNamespace) { echo "\n$Namespace = {}\n";} $lastNamespace = $Namespace;
-		echo ($Namespace==""?"window":$Namespace)."[\"$Name\"] = function (".implode(",",array_keys(json_decode($Arguments,1))).") {\n$Code\n}\n";
+	$classes = extractFirstCol(fetchAll("SELECT DISTINCT ClassName FROM JavascriptFuncs"));
+	foreach($classes as $class) {
+		if (!empty($class)) echo "function $class() {\nvar output = {};\n";
+		/*
+		* 2.1 Write the constructor
+		*
+		*/
+		$constructor = fetchAll("SELECT Value FROM JavascriptFuncs WHERE Type = 'function' AND ClassName = '$class' AND Name = '__construct'");
+		if (!empty($constructor)) echo "\n".$constructor[0]['Value']."\n";
 
+
+		/*
+		* 2.2 Write the variables
+		*
+		*/
+		foreach(fetchAll("SELECT Name, Value FROM JavascriptFuncs WHERE Type = 'variable' AND ClassName = '$class'") as $row) {
+			extract($row);
+			if (!empty($class)) echo "\noutput.";
+			echo "$Name = $Value\n";
+		}
+
+		/*
+		* 2.3 Write the functions
+		*
+		*/
+		foreach(fetchAll("SELECT Name,Arguments,Value as Code FROM JavascriptFuncs WHERE Type = 'function' AND ClassName = '$class'") as $row) {
+			extract($row);
+			if ($Name == "__construct") continue;
+			if (!empty($class)) echo "output.";
+			echo "$Name = function (".implode(",",array_keys(json_decode($Arguments,1))).") {\n$Code\n}\n";
+
+		}
+		if (!empty($class)) echo "\nreturn output;\n}\n";
+		
+		
 	}
 }
 if (isset($_REQUEST["sqlCmd"])) { 
