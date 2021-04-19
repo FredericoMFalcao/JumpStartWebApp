@@ -4,7 +4,7 @@ define("MYSQL_USERNAME", "admin");
 define("MYSQL_PASSWORD", "admin");
 define("MYSQL_DATABASE_NAME", "Test");
 $db = 0;
-function connectToDatabase() {global $db;
+function connectToDatabase() {global $db, $dbName; 
 if(file_exists(".credentials.json")) extract(json_decode(file_get_contents(".credentials.json"),1));
 $db = new PDO("mysql:host=".($dbHost??MYSQL_HOST).";dbname=".($dbName??MYSQL_DATABASE_NAME), $dbUser??MYSQL_USERNAME, $dbPassword??MYSQL_PASSWORD);
 }
@@ -15,6 +15,10 @@ connectToDatabase();
 */
 function fetchAll($q) {global $db; $sq=$db->prepare($q); $sq->execute(); return $sq->fetchAll(PDO::FETCH_ASSOC); }
 function extractFirstCol($array) { $output = []; foreach($array as $rowNo => $row) $output[] = $row[array_keys($row)[0]]; return $output;}
+/*
+* MODE 1: OUTPUT SEED HTML with JS FUNCTIONS
+*
+*/
 function includeJavascriptFunctions() {
 	global $db;
 	$classes = extractFirstCol(fetchAll("SELECT DISTINCT ClassName FROM JavascriptFuncs"));
@@ -54,12 +58,30 @@ function includeJavascriptFunctions() {
 		
 	}
 }
+/*
+* MODE 2: OUTPUT JSON DATA (parse SQL queries)
+*
+*/
 if (isset($_REQUEST["sqlCmd"])) { 
 	$q=$db->prepare($_REQUEST["sqlCmd"]); 
 	$q->execute(); 
 	header("Content-type: application/json");
 	echo json_encode($q->fetchAll(PDO::FETCH_ASSOC)); 
 	die(); 
+}
+/*
+* MODE 3: INITIALIZE DATABASE
+*
+*/
+if (isset($_REQUEST["initDb"]) && $_REQUEST["initDb"]) {
+
+	global $db, $dbName;
+	$_dbName = ($dbName??MYSQL_DATABASE_NAME);
+	$q = $db->prepare("DROP DATABASE ".$_dbName);
+	$q->execute();
+	$q = $db->prepare("CREATE DATABASE $_dbName; USE $_dbName;".file_get_contents("initDb.sql"));
+	$q->execute();
+	die("Done!");
 }
 ?>
 <html>
