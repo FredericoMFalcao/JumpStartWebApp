@@ -21,22 +21,27 @@ function includeJavascriptFunctions() {
 
 	}
 }
+if (isset($_REQUEST["sqlCmd"])) { 
+	$q=$db->prepare($_REQUEST["sqlCmd"]); 
+	$q->execute(); 
+	header("Content-type: application/json");
+	echo json_encode($q->fetchAll(PDO::FETCH_ASSOC)); 
+	die(); 
+}
 ?>
 <html>
 <head>
-	<title>Boilerplate Code for a New Website</title>
+	<title>Seedcode for WebApp Written in Javascript</title>
 	<script src="bootstrap.bundle.min.js"></script>
 	<link href="bootstrap.min.css" rel="stylesheet">
 	<script src="jquery-3.6.0.min.js"></script>
 	<script><?php includeJavascriptFunctions(); ?></script>
 </head>
 <body>
-<pre>A standard web app written purely in Javascript.</pre>
 
 
 
 
-
-<script>main.renderAt(document.body)</script>
+<script>m = main(); m.renderAt(document.body)</script>
 </body>
 </html>
