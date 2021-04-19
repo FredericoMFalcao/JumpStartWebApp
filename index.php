@@ -4,7 +4,9 @@ define("MYSQL_USERNAME", "admin");
 define("MYSQL_PASSWORD", "admin");
 define("MYSQL_DATABASE_NAME", "Test");
 $db = 0;
-function connectToDatabase() {global $db;$db = new PDO("mysql:host=".MYSQL_HOST.";dbname=".MYSQL_DATABASE_NAME."", MYSQL_USERNAME, MYSQL_PASSWORD);}
+function connectToDatabase() {global $db;
+if(file_exists(".credentials.json")) extract(json_decode(file_get_contents(".credentials.json"),1));
+$db = new PDO("mysql:host=".$dbHost??MYSQL_HOST.";dbname=".$dbName??MYSQL_DATABASE_NAME, $dbUser??MYSQL_USERNAME, $dbPassword??MYSQL_PASSWORD);}
 connectToDatabase();
 function includeJavascriptFunctions() {
 	global $db;
