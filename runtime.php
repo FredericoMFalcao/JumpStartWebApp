@@ -1,20 +1,42 @@
 <?php
+/*
+* 0. Server LOCAL STATIC FILES
+*
+*/
+$serverFiles = ["bootstrap.min.css", "bootstrap.bundle.min.js","jquery-3.6.0.min.js"];
+foreach($serverFiles as $file)
+	if ($_SERVER["REQUEST_URI"] == "/$file") 
+		die(file_get_contents($file));
+
+/*
+* DB FUNCTIONS 
+*
+*/
 define("MYSQL_HOST", "127.0.0.1");
 define("MYSQL_USERNAME", "admin");
 define("MYSQL_PASSWORD", "admin");
 define("MYSQL_DATABASE_NAME", "Test");
 $db = 0;
-function connectToDatabase() {global $db, $dbName; 
-if(file_exists(".credentials.json")) extract(json_decode(file_get_contents(".credentials.json"),1));
-$db = new PDO("mysql:host=".($dbHost??MYSQL_HOST).";dbname=".($dbName??MYSQL_DATABASE_NAME), $dbUser??MYSQL_USERNAME, $dbPassword??MYSQL_PASSWORD);
+function connectToDatabase() {
+	global $db, $dbName; 
+	if(file_exists(".credentials.json")) extract(json_decode(file_get_contents(".credentials.json"),1));
+	$db = new PDO("mysql:host=".($dbHost??MYSQL_HOST).";dbname=".($dbName??MYSQL_DATABASE_NAME), $dbUser??MYSQL_USERNAME, $dbPassword??MYSQL_PASSWORD);
 }
-connectToDatabase();
-/*
-* DB FUNCTIONS 
-*
-*/
 function fetchAll($q) {global $db; $sq=$db->prepare($q); $sq->execute(); return $sq->fetchAll(PDO::FETCH_ASSOC); }
 function extractFirstCol($array) { $output = []; foreach($array as $rowNo => $row) $output[] = $row[array_keys($row)[0]]; return $output;}
+connectToDatabase();
+
+/*
+* Global Properties
+*
+*/
+$globalProperties = [];
+function fetchGlobalProperties() {
+	global $globalProperties;
+	$file = ".globalProperties.json"; if (file_exists($file)) $globalProperties = json_decode(file_get_contents($file),1);
+}
+fetchGlobalProperties();
+
 /*
 * MODE 1: OUTPUT SEED HTML with JS FUNCTIONS
 *
@@ -69,27 +91,17 @@ if (isset($_REQUEST["sqlCmd"])) {
 	echo json_encode($q->fetchAll(PDO::FETCH_ASSOC)); 
 	die(); 
 }
-/*
-* MODE 3: INITIALIZE DATABASE
-*
-*/
-if (isset($_REQUEST["initDb"]) && $_REQUEST["initDb"]) {
-
-	global $db, $dbName;
-	$_dbName = ($dbName??MYSQL_DATABASE_NAME);
-	$q = $db->prepare("DROP DATABASE ".$_dbName);
-	$q->execute();
-	$q = $db->prepare("CREATE DATABASE $_dbName; USE $_dbName;".file_get_contents("initDb.sql"));
-	$q->execute();
-	die("Done!");
-}
 ?>
 <html>
 <head>
-	<title>Seedcode for WebApp Written in Javascript</title>
+	<title><?=$globalProperties["Title"]??"Seedcode for WebApp Written in Javascript"?></title>
+<?php if (($globalProperties["bootstrapCSS"]??false)) : ?>
 	<script src="bootstrap.bundle.min.js"></script>
 	<link href="bootstrap.min.css" rel="stylesheet">
+<?php endif; ?>
+<?php if (($globalProperties["jQuery"]??false)) : ?>
 	<script src="jquery-3.6.0.min.js"></script>
+<?php endif; ?>
 	<script><?php includeJavascriptFunctions(); ?></script>
 </head>
 <body>
