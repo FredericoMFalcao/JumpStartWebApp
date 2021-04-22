@@ -19,10 +19,10 @@ function connectToDatabase() {
 		extract(json_decode(file_get_contents(".credentials.json"),1));
 	else
 */
-	if (!isset($_GET["dbUser"]) || !isset($_GET["dbPassword"]) || !isset($_GET["dbName"]))	
+	if (!isset($_REQUEST["dbUser"]) || !isset($_REQUEST["dbPassword"]) || !isset($_REQUEST["dbName"]))	
 		die("No database connection credentials provided.");
 	else
-		extract($_GET);
+	{	$dbUser = $_REQUEST["dbUser"]; $dbPassword = $_REQUEST["dbPassword"]; $dbName = $_REQUEST["dbName"];}
 
 	$db = new PDO("mysql:host=".($dbHost??"localhost").";dbname=".($dbName), $dbUser, $dbPassword);
 }
