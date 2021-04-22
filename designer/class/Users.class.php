@@ -1,8 +1,8 @@
 <?php
 	
-class Users {
+class Users extends _Component {
 	
-	public $data = [	"User[]"       		=> ["type"=> "text",	    "friendlyName"=> "User",           "value" => ""],
+	public $data = [	"User[]"       		=> ["type"=> "text",	    "friendlyName"=> "User",            "value" => ""],
 						"Password[]"      	=> ["type"=> "password",	"friendlyName"=> "Password",        "value" => ""]
 					];
 					
@@ -37,7 +37,8 @@ class Users {
 		/* 2. Create new users in sql-database */
 		try{
 			foreach($users as $username => $attributes) {
-				$query = "DROP USER IF EXISTS $username@localhost; CREATE USER $username@localhost IDENTIFIED BY '{$attributes["password"]}'; GRANT USAGE ON {$dbName}.* TO $username@localhost;";
+				$query = "DROP USER IF EXISTS $username@localhost; CREATE USER $username@localhost IDENTIFIED BY '{$attributes["password"]}'; GRANT SELECT, UPDATE, INSERT, DELETE ON {$dbName}.* TO $username@localhost;";
+				error_log($query);
 				$q = $db->prepare($query); $q->execute();		
 			}
 		} catch (Exception $e) {

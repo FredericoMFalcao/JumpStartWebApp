@@ -1,6 +1,6 @@
 <?php
 	
-class DatabaseConnection {
+class DatabaseConnection extends _Component {
 	
 	public $data = [	"dbHost"      => ["type"=> "text",      "friendlyName"=> "Host",      "value" => "localhost"],
 						"dbUser"      => ["type"=> "text",     	"friendlyName"=> "Username",  "value" => "admin"],
@@ -24,14 +24,14 @@ class DatabaseConnection {
 			$db = new PDO("mysql:host=".$this->data["dbHost"]["value"],$this->data["dbUser"]["value"],$this->data["dbPassword"]["value"]);
 			print(statusMessage(0,"SUCCESS: connected with these credentials.",1)); return 1;
 		}catch(Exception $e){
-			print(statusMessage(0,"ERROR: Couldn't connected with these credentials.",0)); return 0;
+			print(statusMessage(0,"ERROR: Couldn't connected with these credentials. ({$this->data["dbUser"]["value"]})",0)); return 0;
 		}
 		
 	}
 	
 	public function initializeDb() {
 		global $db;
-		if (!testDbConnection()) return 0;
+		if (!$this->testDbConnection()) return 0;
 		try{$q = $db->prepare("DROP DATABASE IF EXISTS ".$_POST["dbName"]); $q->execute();} catch (Exception $e) {
 			print(statusMessage(0,"ERROR: Couldn't drop the old database.",0));
 		}
@@ -48,10 +48,6 @@ class DatabaseConnection {
 	*
 	*/
 	
-	public function parseUserInput() {
-		foreach($_POST as $k => $v ) $data[$k]["value"] = $v;
-	}	
-
 	public function saveToFile() {
 		file_put_contents($this->fileName,json_encode($_POST));
 		print(statusMessage(0,"SUCCESS: Credentials successfully stored.",1));

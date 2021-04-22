@@ -1,6 +1,6 @@
 <?php
 	
-class GlobalProperties {
+class GlobalProperties extends _Component {
 	
 	public $data = [	"Title"       		=> ["type"=> "text",	    "friendlyName"=> "Title",          "value" => "My new website"],
 						"jQuery"      		=> ["type"=> "checkbox",	"friendlyName"=> "jQuery",         "value" => "true"],
@@ -24,10 +24,6 @@ class GlobalProperties {
 	*
 	*/
 	
-	public function parseUserInput() {
-		foreach($_POST as $k => $v ) $data[$k]["value"] = $v;
-	}			
-
 	public function saveToFile() {
 		file_put_contents($this->fileName,json_encode($_POST));
 		print(statusMessage(0,"SUCCESS: Global settings successfully stored.",1));

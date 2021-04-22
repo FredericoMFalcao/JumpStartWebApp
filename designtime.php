@@ -16,7 +16,7 @@ $folder = __DIR__."/designer/class/";
 spl_autoload_register(function ($class_name) {global $folder; require_once "$folder$class_name.class.php";});
 $classes = [];
 foreach(scandir($folder) as $file)
-	if (substr($file,-10) == ".class.php")
+	if (substr($file,-10) == ".class.php" && substr($file,0,1) != "_")
 		$classes[] =  str_replace(".class.php","",$file);
 
 /*
@@ -27,7 +27,8 @@ if (isset($_GET["_cmd"])) {
 	header("Content-type: application/javascript"); 
 	$className = explode("\\", $_GET["_cmd"])[0];
 	$cmd       = explode("\\", $_GET["_cmd"])[1];
-	call_user_func([(new $className()), $cmd]);
+	$component = (new $className())->parseUserInput();	
+	call_user_func([$component, $cmd]);
 	die();
 }
 function statusMessage($id,$message,$success) {

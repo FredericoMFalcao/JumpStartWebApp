@@ -12,15 +12,19 @@ foreach($serverFiles as $file)
 * DB FUNCTIONS 
 *
 */
-define("MYSQL_HOST", "127.0.0.1");
-define("MYSQL_USERNAME", "admin");
-define("MYSQL_PASSWORD", "admin");
-define("MYSQL_DATABASE_NAME", "Test");
 $db = 0;
 function connectToDatabase() {
 	global $db, $dbName; 
-	if(file_exists(".credentials.json")) extract(json_decode(file_get_contents(".credentials.json"),1));
-	$db = new PDO("mysql:host=".($dbHost??MYSQL_HOST).";dbname=".($dbName??MYSQL_DATABASE_NAME), $dbUser??MYSQL_USERNAME, $dbPassword??MYSQL_PASSWORD);
+/*	if(file_exists(".credentials.json")) 
+		extract(json_decode(file_get_contents(".credentials.json"),1));
+	else
+*/
+	if (!isset($_GET["dbUser"]) || !isset($_GET["dbPassword"]) || !isset($_GET["dbName"]))	
+		die("No database connection credentials provided.");
+	else
+		extract($_GET);
+
+	$db = new PDO("mysql:host=".($dbHost??"localhost").";dbname=".($dbName), $dbUser, $dbPassword);
 }
 function fetchAll($q) {global $db; $sq=$db->prepare($q); $sq->execute(); return $sq->fetchAll(PDO::FETCH_ASSOC); }
 function extractFirstCol($array) { $output = []; foreach($array as $rowNo => $row) $output[] = $row[array_keys($row)[0]]; return $output;}
@@ -80,6 +84,71 @@ function includeJavascriptFunctions() {
 		
 	}
 }
+function includeGraphicalComponents() {
+	global $db;
+	foreach(fetchAll("SELECT Name, ViewCode, ControllerCode, ModelCode FROM Components") as $Component) {
+		extract($Component);
+
+		echo "$Name = function () {\nvar output = {};";
+
+
+		/*
+		* 2.1 Write the Model Code
+		*
+		*/
+		$ModelCode = str_replace(["\n","\t","\r"],"",$ModelCode);
+		$ModelCode = str_replace('"','\\"',$ModelCode);
+?>output.updateModel = function () {
+	var controller = this
+	$.ajax({url:"",data: {"sqlCmd":"<?=$ModelCode?>"}, success: function (data) {
+		// Initialize object's variable with data
+		controller.data = data
+		// Force a graphical re-render
+		controller.updateView();
+	 }});
+};
+<?php
+
+		/*
+		* 2.2 Write the Controller Code
+		*
+		*/
+		echo 'output.renderAt = function (domEl) { this.viewEl = domEl; this.updateModel();};';
+
+
+
+		/*
+		* 2.3 Write the View Code
+		*
+		*/
+		echo "output.updateView = function(){ \n".$ViewCode."\n};\n";
+		
+		/*
+		* 2.4 Write the Extension Variables
+		*
+		*/
+		$ComponentName = $Name;
+		foreach(fetchAll("SELECT Name, Value FROM ComponentExtensions WHERE Type = 'variable' AND ClassName = '$ComponentName'") as $row) {
+			extract($row);
+			echo "\noutput.$Name = $Value\n";
+		}
+
+		/*
+		* 2.5 Write the Extension Functions
+		*
+		*/
+		foreach(fetchAll("SELECT Name,Arguments,Value as Code FROM ComponentExtensions WHERE Type = 'function' AND ClassName = '$ComponentName'") as $row) {
+			extract($row);
+			if ($Name == "__construct") continue;
+			echo "output.$Name = function (".implode(",",array_keys(json_decode($Arguments,1))).") {\n$Code\n}\n";
+
+		}
+	
+	
+		echo "\nreturn output;\n};\n";	
+		
+	}
+}
 /*
 * MODE 2: OUTPUT JSON DATA (parse SQL queries)
 *
@@ -102,7 +171,7 @@ if (isset($_REQUEST["sqlCmd"])) {
 <?php if (($globalProperties["jQuery"]??false)) : ?>
 	<script src="jquery-3.6.0.min.js"></script>
 <?php endif; ?>
-	<script><?php includeJavascriptFunctions(); ?></script>
+	<script><?php includeJavascriptFunctions(); includeGraphicalComponents(); ?></script>
 </head>
 <body>
 
