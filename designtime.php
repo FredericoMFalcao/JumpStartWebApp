@@ -12,10 +12,10 @@ foreach($serverFiles as $file)
 * 1. Autoload CLASSES
 *
 */
-$folder = __DIR__."/designer/class/";
-spl_autoload_register(function ($class_name) {global $folder; require_once "$folder$class_name.class.php";});
+spl_autoload_register(function ($class_name) {$file = __DIR__."/designer/types/$class_name.class.php"; if (file_exists($file)) require_once $file;});
+spl_autoload_register(function ($class_name) {$file = __DIR__."/designer/pages/$class_name.class.php"; if (file_exists($file)) require_once $file;});
 $classes = [];
-foreach(scandir($folder) as $file)
+foreach(scandir(__DIR__."/designer/pages/") as $file)
 	if (substr($file,-10) == ".class.php" && substr($file,0,1) != "_")
 		$classes[] =  str_replace(".class.php","",$file);
 
@@ -32,8 +32,7 @@ if (isset($_GET["_cmd"])) {
 	die();
 }
 function statusMessage($id,$message,$success) {
-	$tags = ["DatabaseConnectionStatusMsg","GlobalPropertiesStatusMsg","UsersStatusMsg"];
-	return "$('#".$tags[$id]."').attr('class','alert alert-".($success?"success":"danger")."').text('".str_replace("'","\\'",$message)."');";
+	return "$('#".$id."').attr('class','alert alert-".($success?"success":"danger")."').text('".str_replace("'","\\'",$message)."');";
 }
 
 
@@ -94,7 +93,7 @@ function statusMessage($id,$message,$success) {
 <div class="tab-content" id="nav-tabContent">
   <?php foreach($classes as $no => $class) : ?>
   <div class="tab-pane fade show <?=($no==0?"active":"")?>" id="tab<?=$no?>" role="tabpanel" >
-	  <?=(new $class())->_generateHtmlForm(); ?>
+	  <?=(new $class())->generateHtmlForm(); ?>
   </div>
   <?php endforeach; ?>	
 </div>
