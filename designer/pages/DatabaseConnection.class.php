@@ -4,6 +4,8 @@
 class DatabaseConnection extends _Component {
 
     public $initialStatusBannerMsg = "Your MariaDB database credentials";
+	
+	const priority =  -1;
 
     public $data = [];
 	protected $actions = [

@@ -4,6 +4,8 @@ class GlobalProperties extends _Component {
 
     public $initialStatusBannerMsg = "Your web app generic global properties";
 	
+	const priority = -2;
+	
 	public $data = [];
 
     protected $actions = [

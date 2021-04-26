@@ -18,6 +18,7 @@ $classes = [];
 foreach(scandir(__DIR__."/designer/pages/") as $file)
 	if (substr($file,-10) == ".class.php" && substr($file,0,1) != "_")
 		$classes[] =  str_replace(".class.php","",$file);
+usort($classes, fn($a,$b)=>($b::priority - $a::priority));
 
 /*
 * 2. Parse COMMANDS

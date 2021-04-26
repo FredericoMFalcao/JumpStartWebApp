@@ -13,6 +13,8 @@ class Users extends _Component {
     public $initialStatusBannerMsg = "Your list of users and their initial passwords";
 	
 	public $data = [];
+	
+    const priority = -3;
 					
     protected $actions = [
 //        "createUsers"       => ["label" => "Create Users",               "style" => "primary"]

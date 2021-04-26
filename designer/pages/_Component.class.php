@@ -9,6 +9,8 @@ class _Component {
 
 	public function __construct() {}
 
+    const priority = 0;
+
     /*
     *	2. I/O (input, output)
     *
