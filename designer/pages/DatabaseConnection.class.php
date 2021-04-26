@@ -1,14 +1,11 @@
 <?php
+
 	
 class DatabaseConnection extends _Component {
 
     public $initialStatusBannerMsg = "Your MariaDB database credentials";
 
-    public $data = [	"dbHost"      => ["type" => "Text",     "args" => ["dbHost","Host","localhost"]],
-						"dbUser"      => ["type" => "Text",     "args" => ["dbUser","Username","admin"]],
-						"dbPassword"  => ["type" => "Text",     "args" => ["dbPassword","Password","admin","password"]],
-						"dbName"      => ["type" => "Text",     "args" => ["dbName","Db Name","Test"]]
-					];
+    public $data = [];
 	protected $actions = [
 	        "saveToFile"       => ["label" => "Save",               "style" => "primary"],
             "initializeDb"     => ["label" => "Initialize Db",      "style" => "light"],
@@ -20,7 +17,13 @@ class DatabaseConnection extends _Component {
 	public $fileName = ".credentials.json";
 	
 	public function __construct() { 
-		parent::__construct();
+		$this->data = [			"dbHost"      => new Text(["machineName"=> "dbHost","friendlyName"=>"Host","value"=>"localhost","htmlType"=>"text"]),
+								"dbUser"      => new Text(["machineName"=> "dbUser","friendlyName"=>"Username","value"=>"admin","htmlType"=>"text"]),
+								"dbPassword"  => new Text(["machineName"=> "dbPassword","friendlyName"=>"Password","value"=>"admin","htmlType"=>"password"]),
+								"dbName"      => new Text(["machineName"=> "dbName","friendlyName"=>"DB Name","value"=>"Test","htmlType"=>"text"]),
+						
+					];
+		
 		$this->loadFromFile();
 	}
 	

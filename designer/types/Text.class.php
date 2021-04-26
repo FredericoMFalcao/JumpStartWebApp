@@ -8,16 +8,22 @@ class Text extends _Type {
 	
 	public function renderHtmlInputField() {
 
-		$html = "";
-
-            $html .= '<label class="col-sm-2 col-form-label" >'.$this->friendlyName.'</label>';
-            $html .= '<div class="col-sm-10">';
-            $html .= '<input class="form-control" ';
-            $html .= 'type="'.$this->htmlType.'" ';
-			$html .= 'name="'.array_reduce($this->namespace,fn($c,$i)=>$i."[".$c."]",$this->machineName).'" ';
-            $html .= 'value="'.$this->value.'" ';
-            $html .= ' ></div>';
-
+    		$html = "";
+		
+			$html .= (new _DomEl("label"))
+					->addClass("col-sm-2")
+					->addClass("col-form-label")
+					->setText($this->friendlyName);
+			$html .= (new _DomEl("div"))
+					->addClass("col-sm-10")
+					->addChild(
+						(new _DomEl("input"))
+						->addClass("form-control")
+						->setAttr("type",$this->htmlType)
+						->setAttr("name",array_reduce($this->namespace,fn($c,$i)=>$i."[".$c."]",$this->machineName))
+						->setAttr("value",$this->value)
+					);
+			
 			
 		return $html;
 		

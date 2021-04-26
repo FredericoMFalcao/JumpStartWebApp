@@ -1,24 +1,13 @@
 <?php
 function recursivelyGetValue($o) {if (is_array($o)) return array_map(fn($p)=>recursivelyGetValue($p),$o); else return $o->getValue();}	
-function TypeFactory($v,$k) { if ($v['type'] != "Struct") return new $v['type']($v["args"]); else return array_map(fn($o)=>(new $o["type"]($o["args"]))->addNamespace($k),$v["args"]);}
-function recursiveRenderHtmlInputField(array|_Type $o): string {if (is_array($o)) return implode("",array_map(fn($p)=>recursiveRenderHtmlInputField($p),$o)); else return $o->renderHtmlInputField();}
+function recursiveRenderHtmlInputField(array|_Type $o,$cssNo = 0): string {if (is_array($o)) return "<div class='c$cssNo'>".implode("</div><div class='c$cssNo'>",array_map(fn($p)=>recursiveRenderHtmlInputField($p,++$cssNo),$o))."</div>"; else return $o->renderHtmlInputField();}
 
 		
 class _Component {
 	
 	public function _getTabFriendlyName() { return "Title not defined."; }
 
-	public function __construct() {
-		/* 1. Convert text data, to Single Types and Composite Types */
-		foreach($this->data as $k => $v) 
-			if (substr($k,-2) == "[]") {
-				$name = substr($k,0,-2);
-				$this->data[$name] = [TypeFactory($v,$name."[0]"),TypeFactory($v,$name."[1]"),TypeFactory($v,$name."[2]")];
-				unset($this->data[$k]);
-			}
-			else
-				$this->data[$k] = TypeFactory($v,$k);
-	}
+	public function __construct() {}
 
     /*
     *	2. I/O (input, output)

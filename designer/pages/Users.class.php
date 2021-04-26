@@ -1,16 +1,18 @@
 <?php
+
+function expandArrays(&$data) {
+	foreach($data as $k => $v)
+		if (preg_match(";([a-zA-Z_]+)\[([0-9]+)\];",$k,$matches)) {
+			unset($data[$k]);
+			$data[$matches[1][0]."[]"] = array_fill(0,$matches[2][0],$v);
+		}
+}
 	
 class Users extends _Component {
 
     public $initialStatusBannerMsg = "Your list of users and their initial passwords";
 	
-	public $data = [	
-						"Users[]"      	=> ["type"=> "Struct",	    "args" => [
-													"User"     => ["type" => "Text", "args" => ["User","User",""]],
-													"Password" => ["type" => "Text", "args" => ["Password","Password","","password"]],
-											   ]],
-
-					];
+	public $data = [];
 					
     protected $actions = [
 //        "createUsers"       => ["label" => "Create Users",               "style" => "primary"]
@@ -21,8 +23,13 @@ class Users extends _Component {
 	
 	
 	public function __construct() {
-		parent::__construct();
-//		echo "<pre>"; var_dump($this->data); echo "</pre>";
+		$this->data = [	"Users[5]"      	=> [
+											 "User"     => new Text(["machineName"=> "User","friendlyName"=>"User","value"=>""]),
+										     "Password" => new Text(["machineName"=> "User","friendlyName"=>"Password","value"=>"","htmlType"=>"password"]),
+										     "isAdmin"  => new Checkbox(["machineName"=> "isAdmin","friendlyName"=>"Admin"])
+										    ]
+					  ];
+		expandArrays($this->data);
 	}
 	
 

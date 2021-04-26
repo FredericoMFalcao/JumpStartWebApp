@@ -43,10 +43,14 @@ function statusMessage($id,$message,$success) {
 	<script src="bootstrap.bundle.min.js"></script>
 	<link href="bootstrap.min.css" rel="stylesheet">
 	<script src="jquery-3.6.0.min.js"></script>
+	<style>
+		div.c0 { padding:10px; border:1px solid #d1d4d7;}
+		div.c1 { display: flex;}
+	</style>
 	
 </head>
 <body class="container">
-<form action="?_cmd=StoreDatabaseConnection" method="POST">	
+<form action="" method="POST">	
 	
 <?php if (isset($statusMessage)) :?>
 <div class="alert-dismissible fade show alert alert-<?=$statusMessage[0];?>" role="alert"><?=$statusMessage[1];?>
