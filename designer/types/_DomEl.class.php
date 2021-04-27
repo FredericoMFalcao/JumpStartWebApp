@@ -15,13 +15,19 @@ class _DomEl {
 
 	public function addClass(string $cssClass) {$this->cssClasses[] = $cssClass; return $this;}
 	
-	public function setAttr(string $key, string $value) {if (!empty($key)) $this->attributes[$key] = $value; return $this;}
+	public function attr(string $key, string $value) {if (!empty($key)) $this->attributes[$key] = $value; return $this;}
 	
-	public function addChild(_DomEl $child) { $this->children[] = $child; return $this; }
-	
-	public function setText(string $t) { $this->innerText = $t; return $this; }
+	public function addChild(_DomEl|_Type $child) { $this->children[] = ($child instanceof _Type?$child->asDomEl():$child); return $this; }
 
-	public function render() {
+	public function addChildren(array $children) { 
+		foreach($children as $child) 
+			if (is_array($child)) $this->addChildren($child); else $this->addChild($child); return $this; }
+	
+	public function text(string $t) { $this->innerText = $t; return $this; }
+	
+	public function id(string $i) {$this->attributes["id"] = $i; return $this; }
+
+	public function render() :string {
 		$html = "";
 		$html .= "<".$this->tag;
 		if (!empty($this->cssClasses)) $html .= ' class="'.implode(" ", $this->cssClasses).'"';
@@ -33,7 +39,7 @@ class _DomEl {
 		return $html;
 	}
 	
-	public function __toString() {return $this->render();}
+	public function __toString() {print_r($this); die();return $this->render();}
 	
 }
 ?>

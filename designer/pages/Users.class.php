@@ -17,15 +17,16 @@ class Users extends _Component {
     const priority = -3;
 					
     protected $actions = [
-//        "createUsers"       => ["label" => "Create Users",               "style" => "primary"]
-          "saveToFile"       => ["label" => "Create Users",               "style" => "primary"]
+          "saveToFile"       => ["label" => "Create Users",               "style" => "primary"],
+          "loadOneMore"      => ["label" => "Load One More",               "style" => "light"]
+
     ];					
 	public $fileName = ".users.json";
 	
 	
 	
 	public function __construct() {
-		$this->data = [	"Users[5]"      	=> [
+		$this->data = [	"Users[1]"      	=> [
 											 "User"     => new Text(["machineName"=> "User","friendlyName"=>"User","value"=>""]),
 										     "Password" => new Text(["machineName"=> "User","friendlyName"=>"Password","value"=>"","htmlType"=>"password"]),
 										     "isAdmin"  => new Checkbox(["machineName"=> "isAdmin","friendlyName"=>"Admin"])
@@ -37,31 +38,34 @@ class Users extends _Component {
 
 	
 	public function _getTabFriendlyName() { return "3. Users"; }
-	
+		
 	/*
 	*	1. ACTIONs
 	*
 	*/
+	public function parseUserInput(&$receivedData = null, &$localData = null) { return $this; }
+	public function loadOneMore() {
+		echo (new _jQuery("<div/>"))
+			->html(recursiveRenderInputField($this->data[array_keys($this->data)[0]]))
+			->insertBefore((new _jQuery("#".$this->getDomId()))->find("div.buttons-row"))
+		;
+
+	}
 	public function createUsers() {
 		$users = [];
 	
-		// Restructure array
-		//foreach($_POST["User"] as $no => $u) if (!empty($u)) $users[$u] = ["password"=>$_POST["Password"][$no]];
-
-	
-		/* 1. Delete old users from sql-database */
+		/* 1. Connect to DB */
 		global $db; 
 		$dbObj = new DatabaseConnection();
 		if (!($dbObj->connectToDb())) {
 			$this->setStatusMsg("ERROR: Could not connect to database.","danger"); return 0;
 		}
-		$dbName = $dbObj->data["dbName"]->getValue();
-		
-		
+		$dbName = $dbObj->data["dbName"]->getValue();	
+		/* 2. Delete old users from sql-database */	
 		try{$q = $db->prepare("DROP USER IF EXISTS ".implode(",",array_keys($users))); $q->execute();} catch (Exception $e) {
 					$this->setStatusMsg("ERROR: Could delete old users.","danger"); return 0;
 		}
-		/* 2. Create new users in sql-database */
+		/* 3. Create new users in sql-database */
 		try{
 			foreach($users as $username => $attributes) {
 				$query = "DROP USER IF EXISTS $username@localhost; CREATE USER $username@localhost IDENTIFIED BY '{$attributes["password"]}'; GRANT SELECT, UPDATE, INSERT, DELETE ON {$dbName}.* TO $username@localhost;";

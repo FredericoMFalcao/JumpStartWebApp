@@ -1,15 +1,33 @@
 <?php
 function recursivelyGetValue($o) {if (is_array($o)) return array_map(fn($p)=>recursivelyGetValue($p),$o); else return $o->getValue();}	
-function recursiveRenderHtmlInputField(array|_Type $o,$cssNo = 0): string {if (is_array($o)) return "<div class='c$cssNo'>".implode("</div><div class='c$cssNo'>",array_map(fn($p)=>recursiveRenderHtmlInputField($p,++$cssNo),$o))."</div>"; else return $o->renderHtmlInputField();}
+/*function recursiveRenderInputField(array|_Type $o,$cssNo = 0): _DomEl {
+	if (is_array($o))
+		return (new _DomEl("div"))
+			->addClass("c$cssNo")
+			->after()
+		return "<div class='c$cssNo'>".implode("</div><div class='c$cssNo'>",array_map(fn($p)=>recursiveRenderInputField($p,++$cssNo),$o))."</div>";
+	else 
+		return $o->renderHtmlInputField();
+}*/
 
 		
 class _Component {
 	
+	protected $DomId = null;
+
 	public function _getTabFriendlyName() { return "Title not defined."; }
 
 	public function __construct() {}
 
     const priority = 0;
+	
+    /*
+    *	1. Graphics
+    *
+    */
+	public function setDomId(string $s) { $this->DomId = $s; return $this;}
+	public function getDomId()          { return $this->DomId;}
+	
 
     /*
     *	2. I/O (input, output)
@@ -57,38 +75,49 @@ class _Component {
         print("$('#".get_class($this)."StatusMsg').attr('class','alert alert-$status').text('".str_replace("'","\\'",$msg)."');");
     }
 
-    private function StatusBannerAsHtmlWithTitle($title) {
-        $html = "";
-        $html .= '<div class="col-sm-12">';
-        $html .= '<div class="alert alert-info" role="alert" id="'.get_class($this).'StatusMsg">'.$title.'</div>';
-        $html .= '</div>';
-        return $html;
+    private function StatusBannerWithTitle($title): _DomEl {
+		return (new _DomEl("div"))
+			->addClass("col-sm-12")
+			->addChild((new _DomEl("div"))
+				->addClass("alert")
+				->addClass("alert-info")
+				->attr("role","alert")
+				->id(get_class($this).'StatusMsg')
+				->text($title)
+					
+		    )
+	    ;
     }
 		
 
     public function generateHtmlForm() {
 
-        $html = "";
-
-        $html .= '<div class="mb-3 row">';
+        $outputDiv = (new _DomEl("div"))
+			->addClass("mb-3")
+			->addClass("row");
 
 		/* 1. Render STATUS BANNER */
-        $html .= $this->StatusBannerAsHtmlWithTitle($this->initialStatusBannerMsg);
+        $outputDiv->addChild($this->StatusBannerWithTitle($this->initialStatusBannerMsg));
 
 		/* 2. Render INPUT FIELDS */
-        foreach($this->data as $machineName => $obj)
-			$html .= recursiveRenderHtmlInputField($obj);
+		$outputDiv->addChildren($this->data);		
 
 		/* 3. Render BUTTONS */
-        $html .= '<div class="col-sm-12">';
+		$buttonsRow = $outputDiv->addChild((new _DomEl("div"))->addClass("col-sm-12")->addClass("buttons-row"));
         foreach($this->actions as $actionName => $props) {
-            $html .= '<button type="button" class="btn btn-'.($props["style"]??"primary").' float-end" onclick="submitData(this)" name="'.get_class($this)."\\".$actionName.'" >'.$props["label"].'</button>';
-        }
-        $html .= '</div>';
-
-        $html .= '</div>';
-
-        return $html;
+			$buttonsRow->addChild(
+				(new _DomEl("button"))
+				->attr("type","button")
+				->addClass("btn")->addClass("btn-".($props["style"]??"primary"))
+				->addClass("float-end")
+				->attr("onclick","submitData(this)")
+				->attr("name",get_class($this)."\\".$actionName)
+				->text($props["label"])
+			)
+			;
+        }		
+		$outputDiv->addChild($buttonsRow);
+		return $outputDiv;
     }
 	
 }

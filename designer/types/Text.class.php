@@ -6,26 +6,24 @@ class Text extends _Type {
 		$this->htmlType     = $this->htmlType??"text";
 	}
 	
-	public function renderHtmlInputField() {
+	public function asDomEl() : _DomEl {
 
-    		$html = "";
-		
-			$html .= (new _DomEl("label"))
+			return (new _DomEl("div"))
+				->addChild((new _DomEl("label"))
 					->addClass("col-sm-2")
 					->addClass("col-form-label")
-					->setText($this->friendlyName);
-			$html .= (new _DomEl("div"))
+					->text($this->friendlyName)
+				)->brwaddChild(
+					(new _DomEl("div"))
 					->addClass("col-sm-10")
 					->addChild(
 						(new _DomEl("input"))
 						->addClass("form-control")
-						->setAttr("type",$this->htmlType)
-						->setAttr("name",array_reduce($this->namespace,fn($c,$i)=>$i."[".$c."]",$this->machineName))
-						->setAttr("value",$this->value)
-					);
-			
-			
-		return $html;
+						->attr("type",$this->htmlType)
+						->attr("name",array_reduce($this->namespace,fn($c,$i)=>$i."[".$c."]",$this->machineName))
+						->attr("value",$this->value)
+					)
+				);
 		
 	}
 	

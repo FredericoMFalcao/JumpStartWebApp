@@ -4,39 +4,47 @@
 *
 */
 
-$serverFiles = ["bootstrap.min.css", "bootstrap.bundle.min.js","jquery-3.6.0.min.js"];
+$serverFiles = ["bootstrap.min.css", "bootstrap.bundle.min.js", "bootstrap.bundle.min.js.map","jquery-3.6.0.min.js","favicon.ico"];
 foreach($serverFiles as $file)
 	if ($_SERVER["REQUEST_URI"] == "/$file") 
-		die(file_get_contents($file));
+		die(file_exists($file)?file_get_contents($file):"");
 /*
-* 1. Autoload CLASSES
+* 1. Autoload CLASSES (Pages and Types)
 *
 */
 spl_autoload_register(function ($class_name) {$file = __DIR__."/designer/types/$class_name.class.php"; if (file_exists($file)) require_once $file;});
 spl_autoload_register(function ($class_name) {$file = __DIR__."/designer/pages/$class_name.class.php"; if (file_exists($file)) require_once $file;});
-$classes = [];
+$pageNames = [];
 foreach(scandir(__DIR__."/designer/pages/") as $file)
 	if (substr($file,-10) == ".class.php" && substr($file,0,1) != "_")
-		$classes[] =  str_replace(".class.php","",$file);
-usort($classes, fn($a,$b)=>($b::priority - $a::priority));
+		$pageNames[] =  str_replace(".class.php","",$file);
+usort($pageNames, fn($a,$b)=>($b::priority - $a::priority));
+function jQuery($a) {return new _jQuery($a);}
 
 /*
-* 2. Parse COMMANDS
+* 2. Initialize PAGES
+*
+*/
+$pages = [];
+foreach($pageNames as $no => $pageName) 
+	$pages[$pageName] = (new $pageName())->setDomId("tab-$pageName");
+
+
+
+/*
+* 3. Parse COMMANDS
 *
 */
 if (isset($_GET["_cmd"])) {
 	header("Content-type: application/javascript"); 
 	$className = explode("\\", $_GET["_cmd"])[0];
 	$cmd       = explode("\\", $_GET["_cmd"])[1];
-	$component = (new $className())->parseUserInput();	
-	call_user_func([$component, $cmd]);
-	die();
+	if (isset($pages[$className]))
+		die(call_user_func([$pages[$className]->parseUserInput(), $cmd]));
+	else
+		die("Command not found.");
 }
-function statusMessage($id,$message,$success) {
-	return "$('#".$id."').attr('class','alert alert-".($success?"success":"danger")."').text('".str_replace("'","\\'",$message)."');";
-}
-
-
+function statusMessage($id,$message,$success) {return "$('#".$id."').attr('class','alert alert-".($success?"success":"danger")."').text('".str_replace("'","\\'",$message)."');";}
 ?>
 <html>
 <head>
@@ -87,18 +95,18 @@ function statusMessage($id,$message,$success) {
 
 <nav>
   <div class="nav nav-tabs" id="nav-tab" role="tablist">
-	  <?php foreach($classes as $no => $class) : ?>
-	  <button class="nav-link <?=($no==0?"active":"")?>" data-bs-toggle="tab" data-bs-target="#tab<?=$no?>" type="button" role="tab" >
-		  <?=(new $class())->_getTabFriendlyName(); ?>
+	  <?php foreach($pages as $pageName => $page) : ?>
+	  <button class="nav-link <?=($pageName==array_keys($pages)[0]?"active":"")?>" data-bs-toggle="tab" data-bs-target="#tab-<?=$pageName?>" type="button" role="tab" >
+		  <?=$page->_getTabFriendlyName()?>
 	  </button>
 	  <?php endforeach; ?>	
 	  
   </div>
 </nav>
 <div class="tab-content" id="nav-tabContent">
-  <?php foreach($classes as $no => $class) : ?>
-  <div class="tab-pane fade show <?=($no==0?"active":"")?>" id="tab<?=$no?>" role="tabpanel" >
-	  <?=(new $class())->generateHtmlForm(); ?>
+  <?php foreach($pages as $pageName => $page) : ?>
+  <div class="tab-pane fade show <?=($pageName==array_keys($pages)[0]?"active":"")?>" id="tab-<?=$pageName?>" role="tabpanel" >
+	  <?=$page->generateHtmlForm()?>
   </div>
   <?php endforeach; ?>	
 </div>
@@ -109,7 +117,6 @@ function statusMessage($id,$message,$success) {
 
 <script>
 function submitData(domEl) {$.ajax({url:"?_cmd="+$(domEl).attr("name"),method:"POST",data:$(domEl).closest(".row").find("input").serialize(),success:function(js){eval(js);}});}
-function cloneUserPass(domEl) {}
 </script>
 </body>
 </html>

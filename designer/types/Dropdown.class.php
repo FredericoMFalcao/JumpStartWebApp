@@ -1,9 +1,14 @@
 <?php
-class Checkbox extends _Type {
+class Dropdown extends _Type {
+	
+	private $values = [];
 	
 	public function __construct(array $data) {
 		parent::__construct($data);
-		$this->htmlType     = "checkbox";
+
+		if (isset($data["values"])) $this->values = $data["values"];
+
+		$this->htmlType     = "select";
 	}
 	
 	public function renderHtmlInputField() {
@@ -17,12 +22,14 @@ class Checkbox extends _Type {
 		$html .= (new _DomEl("div"))
 				->addClass("col-sm-10")
 				->addChild(
-					(new _DomEl("input"))
-					->addClass("form-check-input")
-					->attr("type",$this->htmlType)
-					->attr("name",array_reduce($this->namespace,fn($c,$i)=>$i."[".$c."]",$this->machineName))
-					->attr("value","true")
-					->attr(($this->value==true?"checked":""),"checked")
+					(new _DomEl("select"))
+					->addClass("form-select")
+					->addChildren(
+						array_map(
+							fn($o)=>(new _DomEl("option"))->text($o),
+							$this->values
+						)
+				)
 				);
 
 
@@ -30,4 +37,3 @@ class Checkbox extends _Type {
 	}
 	
 }
-?>
